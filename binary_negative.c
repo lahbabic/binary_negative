@@ -57,15 +57,12 @@ int add_one(binaries *bin, int i)
     return 0;
 }
 
-int convert_binary_to_int(binaries *bin, int negatif)
+int convert_binary_to_int(binaries *bin)
 {
     int number = 0;
     for (int i = 0; i < bin->length; i++)
     {
-        if (negatif == 0)
-            number += pow(2, bin->length-i-1)*bin->binary[i];
-        else if (negatif == 1)
-            number += pow(2, bin->length-i-1)*bin->binary[i];    
+        number += pow(2, bin->length-i-1)*bin->binary[i];
     }
     return number;
 }
@@ -102,10 +99,7 @@ int main(int argc, char *argv[])
     bin = convert_int_to_binary(number, 1, binary_length);
     invert_binary(bin);
     add_one(bin, bin->length-1);
-    if (number >= 0)
-        number = convert_binary_to_int(bin, 0);
-    else if (number < 0)
-        number = convert_binary_to_int(bin, 1);
+    number = convert_binary_to_int(bin);
     printf("%d\n", number);
     return 0; 
 }
