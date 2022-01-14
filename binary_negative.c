@@ -1,69 +1,111 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-int pow(int base, int exponent)
+typedef struct binary{
+    int *binary;
+    int length;
+}binaries;
+
+
+long int pow(long int base, long int exponent)
 {
-    if (exponent != 1)
+    if (exponent == 0)
+        return 1;
+    else if (exponent > 0)
+    {
         return base*pow(base, exponent-1);
-    else if (exponent == 1)
-        return base;
+    }
+    return 0;
 }
 
-void invert_binary(int *bits, int binary_length)
+void invert_binary(binaries *bin)
 {
-    for (int i = 0; i < binary_length; i++)
+    int tmp = 0;
+    for (int i = 0; i < bin->length/2; i++)
     {
-        if (bits[i] == 0)
-            bits[i] = 1;
-        else if (bits[i] == 1)
-            bits[i] = 0;
+        tmp = bin->binary[i];
+        bin->binary[i] = bin->binary[bin->length-i-1];
+        bin->binary[bin->length-i-1] = tmp;
+    }
+    for (int i = 0; i < bin->length; i++)
+    {
+        if (bin->binary[i] == 0)
+            bin->binary[i] = 1;
+        else if (bin->binary[i] == 1)
+            bin->binary[i] = 0;
+        else if (bin->binary[i] == -1)
+            bin->binary[i] = 0;    
     }
 }
 
-int convert_binary_to_int(int *bits, int binary_length)
+int add_one(binaries *bin, int i)
 {
-    int number;
-    for (int i = 0; i < binary_length; i++)
-    {
-        number += pow(2, binary_length-i)*bits[i];
+    if (bin->binary[i] == 0){
+        bin->binary[i] = 1;
+        return 0;    
     }
-    number -= pow(2, binary_length+1)*bits[0];
+    else if (bin->binary[i] == 1)
+    {
+        if (i == 0)
+        {
+            bin->length += 1;
+            bin->binary = (int *)realloc(bin->binary, bin->length*sizeof(int));
+        }
+        bin->binary[i] = 0;
+        return add_one(bin, i-1);
+    }
+    return 0;
+}
+
+int convert_binary_to_int(binaries *bin, int negatif)
+{
+    int number = 0;
+    for (int i = 0; i < bin->length; i++)
+    {
+        if (negatif == 0)
+            number += pow(2, bin->length-i-1)*bin->binary[i];
+        else if (negatif == 1)
+            number += pow(2, bin->length-i-1)*bin->binary[i];    
+    }
     return number;
 }
 
-void convert_int_to_binary(int *bits, int number, int mask, int binary_length)
+binaries *convert_int_to_binary(int number, int mask, int binary_length)
 {
-        int mask_shifted = 0;
-        int number_and_mask = 0;
-        for (int i = 0; i < binary_length; ++i)
-        {
-                mask_shifted = mask << i;
-                number_and_mask = number & mask_shifted;
-                bits[i] = number_and_mask >> i;
-        }
-        mask_shifted = 0;
-        number_and_mask = 0;
+    int mask_shifted = 0;
+    int number_and_mask = 0;
+    binaries *bin;
+    bin = (binaries *)malloc(sizeof(binaries));
+    bin->binary = (int *)malloc(sizeof(int));
+    int i = 0;
+    while (1)
+    {
+        mask_shifted = mask << i;
+        number_and_mask = number & mask_shifted;
+        bin->binary[i] = number_and_mask >> i;
+        if (i == binary_length-1)
+            break; 
+        bin->binary = (int *)realloc(bin->binary, (i+2)*sizeof(int));
+        i++;
+    }
+    bin->length = i+1;
+    return bin;
 }
+
+
 
 int main(int argc, char *argv[])
 {
     int binary_length = 32;
-    int negatif_of_number = 0;
-    int *bits = (int *)malloc(binary_length*sizeof(int));
-    convert_int_to_binary(bits, 2, 1, binary_length);
-    for (int i = 0; i < binary_length; i++)
-    {
-        printf("%d ", bits[i]);
-    }
-    printf("\n\n");
-    invert_binary(bits, binary_length);
-    for (int i = 0; i < binary_length; i++)
-    {
-        printf("%d ", bits[i]);
-    }
-    printf("\n\n");
-    printf("%d\n", pow(2, 3));
-    negatif_of_number = convert_binary_to_int(bits, binary_length);
-    printf("%d\n", negatif_of_number);
-    return 0;
+    int number = atoi(argv[1]);
+    binaries *bin = (binaries *)malloc(sizeof(binaries));
+    bin = convert_int_to_binary(number, 1, binary_length);
+    invert_binary(bin);
+    add_one(bin, bin->length-1);
+    if (number >= 0)
+        number = convert_binary_to_int(bin, 0);
+    else if (number < 0)
+        number = convert_binary_to_int(bin, 1);
+    printf("%d\n", number);
+    return 0; 
 }
